@@ -24,25 +24,25 @@ post_json(Req, State) ->
 		insert -> 
 			Value = cache_server:insert(tableName, maps:get(key,ReqBodyMap), maps:get(value,ReqBodyMap), 600),
 			Value_bin = atom_to_binary(Value, utf8),
-			Body = <<"{\"result1\": \"", Value_bin/binary, "\"}\n">>,
-			Req3 = cowboy_req:reply(200, #{}, Body, Req2),
+			Body = <<"{\"result\": \"", Value_bin/binary, "\"}\n">>,
+			Req3 = cowboy_req:set_resp_body(Body, Req2),
 			{true, Req3, State};
 		lookup -> 
-			Value = cache_server:lookup(tableName, maps:get(key,ReqBodyMap)),
-			Body = {<<"{\"result\": \"">>, Value, <<"\"}\n">>},
-			Req3 = cowboy_req:reply(200, #{}, Body, Req2),
+			{_, Value} = cache_server:lookup(tableName, maps:get(key,ReqBodyMap)),
+			Body = Value,
+			Req3 = cowboy_req:set_resp_body(Body, Req2),
 			{true, Req3, State};
 		lookup_by_date -> 
 			%io:format("~p ~n ", [list_to_binary(atom_to_list(maps:get(date_from,ReqBodyMap)))]),
 			%io:format("~p ~n ", [list_to_binary(atom_to_list(maps:get(date_to,ReqBodyMap)))]),
 			Body = <<"{\"result\": \"ok\"}">>,
-			Req3 = cowboy_req:reply(200, #{}, Body, Req2),
+			Req3 = cowboy_req:set_resp_body(Body, Req2),
 			{true, Req3, State};
 			%Value = cache_server:lookup_by_date(tableName, maps:get(date_from,ReqBodyMap), maps:get(date_to,ReqBodyMap)),
 			%io:format("~p ~n ", [Value]);
 		_ -> 
 			Body = <<"{\"result\": \"error\"}">>,
-			Req3 = cowboy_req:reply(200, #{}, Body, Req2),
+			Req3 = cowboy_req:set_resp_body(Body, Req2),
 			{true, Req3, State}
 	end.
 	
