@@ -13,10 +13,14 @@ insert(TableName, Key, Value, Live_time) ->
 lookup(TableName, Key) ->
 	{MegaSecs,Secs,_MicroSecs} = erlang:timestamp(),
 	Time_out = MegaSecs*1000000+Secs,
-	MatchSpec = [{{'$1','$2','$3'},[{'=:=','$1',Key}, {'>=','$3',Time_out}],['$2']}],
-	case ets:select(TableName, MatchSpec) of
+
+	case ets:lookup(TableName, Key) of
 		[] -> {error, error};
-		[Value | _] -> {ok, Value}
+		[{Key, Value, Time_live}] -> 
+		if
+			Time_live >= Time_out -> {ok, Value};
+			true -> {error, error}
+    		end
    	end.
 
 delete_obsolete(TableName) ->
